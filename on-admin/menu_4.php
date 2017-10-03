@@ -1,0 +1,119 @@
+<?php
+
+require '_header.php';
+$id_user = $_SESSION['id'];
+$nama_org = $_SESSION['nama_org'];
+$eselon = $_SESSION['eselon'];
+
+?>
+
+<div class="container">
+  <h2>Usulan Dokumen</h2>
+  <p><b>User Log :</b> <?php echo $_SESSION['nama']." (".$_SESSION['jabatan'].")" ?></p>
+  <hr />
+
+<table id="mytable" class="table table-bordered">
+    <thead>
+      <th>No.</th>
+      <th>No. Dokumen</th>
+      <th>Judul</th>
+      <th>Buat Usulan</th>
+    </thead>
+<?php 
+  //menampilkan data mysqli
+  include "../koneksi.php";
+  $no = 0;
+  $result_dokumen = mysqli_query($connect,"SELECT DISTINCT id_dokumen FROM tbl_rek_file_distribusi");
+
+  if($result_dokumen) {
+    if($result_dokumen->num_rows > 0) {
+      while ($row_dokumen = $result_dokumen->fetch_object()) {
+          $no++;
+          $load_dokumen = mysqli_query($connect,"SELECT no_dokumen,judul_dokumen FROM tbl_dokumen WHERE id='$row_dokumen->id_dokumen' AND status='Telah Didistribusi'");
+          if($load_dokumen) {
+            if($load_dokumen->num_rows > 0) {
+              while($row_load = $load_dokumen->fetch_object()) {
+?>
+
+                <tr>
+                  <td><?php echo "$no."; ?></td>
+                  <td><?php echo $row_load->no_dokumen; ?></td>
+                  <td><?php echo $row_load->judul_dokumen; ?></td>
+                  <td class="text-center">
+                    <a href="#" class="open_modal_amandemen btn btn-primary" id="<?php echo $row_dokumen->id_dokumen; ?>"><span class="glyphicon glyphicon-edit"></span> Amandemen</a> 
+                    <a href="#" class="open_modal_pemusnahan btn btn-danger" id="<?php echo $row_dokumen->id_dokumen; ?>"><span class="glyphicon glyphicon-edit"></span> Pemusnahan</a>
+                  </td>
+                </tr>
+<?php
+              }
+            } else {
+              echo "<tr>";
+                echo "<td colspan='4' class='text-center'>Data Tidak Tersedia</td>";
+              echo "</tr>";
+              break;
+            }
+          }          
+      }
+    } else {
+      echo "<tr>";
+        echo "<td colspan='4' class='text-center'>Data Tidak Tersedia</td>";
+      echo "</tr>";
+    }
+  }
+?>
+
+</table>
+</div>
+
+<!-- Modal Popup untuk Amandemen--> 
+<div id="ModalAmandemen" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+</div>
+
+<!-- Modal Popup untuk Pemusnahan--> 
+<div id="ModalPemusnahan" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+
+</div>
+
+<!-- Javascript untuk popup modal Amandemen--> 
+<script type="text/javascript">
+   $(document).ready(function () {
+   $(".open_modal_amandemen").click(function(e) {
+      var m = $(this).attr("id");
+       $.ajax({
+             url: "modal_amandemen_dokumen.php",
+             type: "GET",
+             data : {id: m,},
+             success: function (ajaxData){
+               $("#ModalAmandemen").html(ajaxData);
+               $("#ModalAmandemen").modal('show',{backdrop: 'true'});
+             }
+           });
+        });
+      });
+</script>
+
+<!-- Javascript untuk popup modal Pemushanan--> 
+<script type="text/javascript">
+   $(document).ready(function () {
+   $(".open_modal_pemusnahan").click(function(e) {
+      var m = $(this).attr("id");
+       $.ajax({
+             url: "modal_pemusnahan_dokumen.php",
+             type: "GET",
+             data : {id: m,},
+             success: function (ajaxData){
+               $("#ModalPemusnahan").html(ajaxData);
+               $("#ModalPemusnahan").modal('show',{backdrop: 'true'});
+             }
+           });
+        });
+      });
+</script>
+
+<?php
+
+$connect->close();
+require '_footer.php';
+
+?>
